@@ -31,7 +31,7 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 
 [tool.pyrefly]
-project-includes = ["src", "tests"]
+project-includes = ["app.py", "src", "tests"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/contabilidad"]

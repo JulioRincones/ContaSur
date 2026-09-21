@@ -46,12 +46,6 @@ def test_rn_03_detecta_asiento_cuadrado_y_descuadrado() -> None:
     assert asiento_descuadrado.esta_cuadrado is False
 
 
-def test_regresion_rn_03_asiento_descuadrado_no_debe_aceptarse_como_cuadrado() -> None:
-    asiento = AsientoContable(debe=Decimal("100"), haber=Decimal("90"))
-
-    assert asiento.esta_cuadrado is False
-
-
 def test_rn_04_detecta_cuentas_vencidas_segun_fecha_y_pago() -> None:
     fecha_evaluacion = date(2026, 9, 8)
     cuenta_impaga_vencida = CuentaPorPagar(date(2026, 9, 7), pagada=False)

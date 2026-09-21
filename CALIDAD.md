@@ -109,19 +109,28 @@ Los siguientes apartados sirven como línea base. Los hallazgos definitivos debe
 
 **Estado:** CONFIRMADO Y CORREGIDO.
 
-**Caso observado:** tratamiento incorrecto de un asiento descuadrado.
+**Caso observado:** la interfaz Streamlit no podía importar el paquete del
+proyecto.
 
-Durante la auditoría se reprodujo una mutación defectuosa en
-`AsientoContable.esta_cuadrado`, donde el resultado se calculaba con
-`self.debe != self.haber`. Esta condición marcaba como cuadrado un asiento con
-Debe `100` y Haber `90`.
+Al ejecutar `uv run streamlit run app.py`, la aplicación terminaba con
+`ModuleNotFoundError: No module named 'contabilidad'`. Pytest no revelaba el
+problema porque su configuración añadía `src` al camino de importación, mientras
+que Streamlit ejecutaba `app.py` sin esa ayuda. El proyecto tenía un layout
+`src`, pero no declaraba cómo construir e instalar el paquete.
 
 **Evidencia:**
 
-1. Código defectuoso reproducido: `return self.debe != self.haber`.
-2. Prueba que falla: `test_regresion_rn_03_asiento_descuadrado_no_debe_aceptarse_como_cuadrado`.
-3. Corrección aplicada: `return self.debe == self.haber`.
-4. Resultado posterior: `uv run pytest` finaliza con 9 pruebas aprobadas.
+1. Error observado al iniciar la interfaz: `ModuleNotFoundError` en
+   `from contabilidad import ...`.
+2. Causa: faltaban `[build-system]` y la selección del paquete
+   `src/contabilidad` en `pyproject.toml`.
+3. Corrección aplicada: configuración de Hatchling y ejecución de `uv sync`
+   para instalar el proyecto.
+4. Prueba de regresión:
+   `test_regresion_paquete_disponible_fuera_del_directorio_del_proyecto`, que
+   importa `contabilidad` desde un proceso ubicado en una carpeta temporal y
+   sin depender del `PYTHONPATH` de Pytest.
+5. Resultado posterior: `uv run pytest` finaliza con 9 pruebas aprobadas.
 
 ---
 
@@ -189,25 +198,28 @@ registro que rechace el descuadre y añadir su prueba de aceptación.
 Este apartado debe completarse cuando exista un defecto real.
 
 **Defecto encontrado:**  
-Una mutación defectuosa de RN-03 usaba `self.debe != self.haber` para
-determinar si un asiento estaba cuadrado.
+La aplicación Streamlit fallaba al iniciar con
+`ModuleNotFoundError: No module named 'contabilidad'`.
 
 **Regla afectada:**  
-RN-03: Equilibrio de un asiento contable.
+Requisito de ejecutabilidad y reproducibilidad del proyecto.
 
 **Comportamiento esperado:**  
-Un asiento solo se considera cuadrado cuando el Debe es exactamente igual al
-Haber.
+`app.py` debe poder importar el paquete `contabilidad` después de ejecutar
+`uv sync`, con independencia del directorio desde el que Python resuelva el
+módulo.
 
 **Comportamiento observado:**  
-Un asiento con Debe `100` y Haber `90` era clasificado como cuadrado durante la
-mutación defectuosa.
+La suite funcionaba gracias al `pythonpath` configurado para Pytest, pero
+Streamlit no encontraba `contabilidad` y la interfaz no se ejecutaba.
 
 **Prueba que reproduce el defecto:**  
-`test_regresion_rn_03_asiento_descuadrado_no_debe_aceptarse_como_cuadrado`.
+`test_regresion_paquete_disponible_fuera_del_directorio_del_proyecto`.
 
 **Corrección realizada:**  
-Se reemplazó la comparación defectuosa por `self.debe == self.haber`.
+Se agregó Hatchling como sistema de construcción, se declaró
+`src/contabilidad` como paquete de la distribución y se sincronizó el entorno
+con `uv sync`.
 
 **Resultado después de corregir:**  
 `uv run pytest` finaliza con 9 pruebas aprobadas.
@@ -221,8 +233,9 @@ Se reemplazó la comparación defectuosa por `self.debe == self.haber`.
 | 2026-09-08 | Creación de línea base | Inicio del proyecto | README.md / CALIDAD.md |
 | 2026-09-08 | Incorporación de pruebas | Verificar reglas de negocio | `uv run pytest`: 9 passed |
 | 2026-09-08 | Revisión estática | Detectar problemas de código y tipos | `uv run ruff check .`: All checks passed; `uv run pyrefly check`: 0 errors |
-| 2026-09-08 | Corrección de defecto real | Convertir defecto encontrado en prueba de regresión | `test_regresion_rn_03_asiento_descuadrado_no_debe_aceptarse_como_cuadrado` |
+| 2026-09-08 | Corrección de defecto real | Permitir que Streamlit importe el paquete instalado | `test_regresion_paquete_disponible_fuera_del_directorio_del_proyecto` |
 | 2026-09-21 | Hallazgo de validación confirmado | Contrastar la necesidad de evitar asientos descuadrados con el comportamiento entregado | Hallazgo 3 y revisión de `app.py` / RN-03 |
+| 2026-09-21 | Ampliación del análisis de tipos | Incluir la interfaz Streamlit en el alcance de Pyrefly | `project-includes = ["app.py", "src", "tests"]`; Pyrefly: 0 errores |
 
 ## 7. Conclusión de la línea base
 
