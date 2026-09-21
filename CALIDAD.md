@@ -58,7 +58,7 @@ La tabla relaciona las necesidades del sistema con criterios verificables y con 
 |---|---|---|---|
 | Evitar movimientos con montos inválidos | Todo monto registrado debe ser > 0 | Prueba pytest RN-01 | VACÍA |
 | Obtener correctamente el saldo de la empresa | Saldo = ingresos - egresos | Prueba pytest RN-02 | VACÍA |
-| Evitar asientos contables descuadrados | Debe = Haber | Prueba pytest RN-03 | VACÍA |
+| Evitar asientos contables descuadrados | Debe = Haber | Prueba pytest RN-03 | Hallazgo 3: la interfaz detecta el descuadre, pero no impide ni registra el asiento |
 | Identificar obligaciones vencidas | Una cuenta impaga con vencimiento anterior a la fecha evaluada se marca como vencida | Prueba pytest RN-04 | VACÍA |
 | Informar la situación del saldo | > 0 SUPERAVIT; = 0 EQUILIBRIO; < 0 DEFICIT | Prueba pytest RN-05 | VACÍA |
 | Mantener código analizable y tipado | Ruff y Pyrefly deben finalizar sin errores | Salida de ruff y pyrefly | No aplica directamente |
@@ -145,18 +145,42 @@ y `-1` para RN-05. Las pruebas asociadas son
 
 ### Hallazgo 3 - Hallazgo de validación
 
-**Estado:** CASO PROPUESTO; DEBE VALIDARSE CON EL DOMINIO ANTES DE PRESENTARLO COMO HALLAZGO REAL.
+**Estado:** CONFIRMADO POR CONTRASTE ENTRE LA NECESIDAD DECLARADA Y EL PRODUCTO.
 
 **Situación:**  
-Supongamos que RN-04 define que una cuenta se considera vencida solamente cuando `fecha_vencimiento < fecha_actual`. La implementación y todas las pruebas podrían cumplir perfectamente esa definición.
+La tabla de trazabilidad declara la necesidad de "evitar asientos contables
+descuadrados". Sin embargo, RN-03 y sus pruebas solo verifican si Debe y Haber
+son iguales. Al ingresar Debe `100` y Haber `90`, la interfaz muestra el mensaje
+"Asiento descuadrado", pero no existe una operación de registro que pueda
+rechazarse ni una garantía que impida continuar con ese asiento.
 
-Sin embargo, durante una revisión con la necesidad real del usuario se podría descubrir que una factura que vence **hoy** debe aparecer como vencida a partir de una condición determinada por el negocio. Si el requisito real fuera ese, el sistema podría aprobar toda su suite y aun así entregar una clasificación que no satisface la necesidad.
+La suite completa puede terminar en verde porque comprueba correctamente la
+clasificación `esta_cuadrado`. Aun así, el producto no satisface la necesidad más
+amplia que quedó declarada: evitar que un asiento descuadrado sea aceptado por el
+flujo contable.
 
-**Por qué sería un problema de validación:**  
-La implementación puede coincidir exactamente con la regla documentada y las pruebas pueden verificarla correctamente. El problema estaría en que la regla especificada no representa la necesidad real del usuario. Por ello, no sería necesariamente un error de programación, sino una discrepancia entre lo construido y lo que el sistema debía hacer.
+**Por qué es un problema de validación:**
+El código implementa correctamente la regla especificada y las pruebas detectan
+si la comparación Debe/Haber se altera. No se encontró un error en esa
+implementación. El problema es que el criterio verificable se redujo a
+"detectar" un descuadre, mientras la necesidad pide "evitarlo". Por eso existe
+una diferencia entre construir correctamente la función especificada y construir
+el comportamiento que la necesidad declara.
 
-**Evidencia de validación requerida:**  
-Confirmación de la regla correcta con el responsable o usuario del proceso contable y registro del caso observado.
+**Evidencia observada:**
+
+1. Necesidad declarada en la tabla: evitar asientos descuadrados.
+2. `app.py`: el flujo recibe Debe y Haber y solo presenta un mensaje de estado.
+3. `tests/test_negocio.py`: RN-03 prueba la clasificación, no el rechazo de una
+   operación.
+4. Ejemplo reproducible: Debe `100`, Haber `90`; las pruebas siguen en verde y
+   la interfaz se limita a informar la diferencia.
+
+**Decisión:**
+Se conserva el hallazgo en esta línea base. En una iteración posterior se debe
+aclarar la necesidad: si solo se requiere informar, se corrige su redacción; si
+realmente se requiere evitar el asiento, se debe implementar una operación de
+registro que rechace el descuadre y añadir su prueba de aceptación.
 
 ---
 
@@ -198,7 +222,8 @@ Se reemplazó la comparación defectuosa por `self.debe == self.haber`.
 | 2026-09-08 | Incorporación de pruebas | Verificar reglas de negocio | `uv run pytest`: 9 passed |
 | 2026-09-08 | Revisión estática | Detectar problemas de código y tipos | `uv run ruff check .`: All checks passed; `uv run pyrefly check`: 0 errors |
 | 2026-09-08 | Corrección de defecto real | Convertir defecto encontrado en prueba de regresión | `test_regresion_rn_03_asiento_descuadrado_no_debe_aceptarse_como_cuadrado` |
+| 2026-09-21 | Hallazgo de validación confirmado | Contrastar la necesidad de evitar asientos descuadrados con el comportamiento entregado | Hallazgo 3 y revisión de `app.py` / RN-03 |
 
 ## 7. Conclusión de la línea base
 
-La calidad de este proyecto no se evaluará por la cantidad de funcionalidades contables implementadas, sino por la capacidad de demostrar su comportamiento mediante evidencia. La línea base verificable queda cubierta porque `ruff`, `pyrefly` y `pytest` finalizan correctamente, existe evidencia para cada regla declarada y se reprodujo/corrigió un defecto real. La validación con el dominio se mantiene pendiente hasta contar con confirmación externa real.
+La calidad de este proyecto no se evaluará por la cantidad de funcionalidades contables implementadas, sino por la capacidad de demostrar su comportamiento mediante evidencia. La línea base verificable queda cubierta porque `ruff`, `pyrefly` y `pytest` finalizan correctamente, existe evidencia para cada regla declarada y se reprodujo/corrigió un defecto real. La auditoría confirmó además una brecha de validación entre la necesidad de evitar asientos descuadrados y la función actual, que solo los detecta. Queda pendiente acordar con el responsable del dominio si la solución debe impedir el registro o si corresponde corregir la redacción de la necesidad.

@@ -81,8 +81,8 @@ Tener `uv` instalado.
 ### Clonar el repositorio
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
-cd contabilidad-empresas
+git clone https://github.com/JulioRincones/ContaSur.git
+cd ContaSur
 ```
 
 ### Instalar las dependencias
@@ -172,7 +172,7 @@ En una revisión adversarial, el primer análisis propuso aceptar una prueba por
 
 ## 11. Autor
 
-Nombre: ______________________________
+Nombre: Julio Rincones
 
 Asignatura: PRO402 - Taller de Testing y Calidad de Software
 
