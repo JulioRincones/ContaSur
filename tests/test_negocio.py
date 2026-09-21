@@ -8,6 +8,7 @@ from contabilidad import (
     CuentaPorPagar,
     clasificar_saldo,
     cuenta_esta_vencida,
+    registrar_asiento,
     registrar_movimiento,
     saldo_contable,
 )
@@ -44,6 +45,15 @@ def test_rn_03_detecta_asiento_cuadrado_y_descuadrado() -> None:
 
     assert asiento_cuadrado.esta_cuadrado is True
     assert asiento_descuadrado.esta_cuadrado is False
+
+
+def test_rn_03_rechaza_registro_de_asiento_descuadrado() -> None:
+    with pytest.raises(ValueError, match="Debe y Haber no coinciden"):
+        registrar_asiento(debe=Decimal("100"), haber=Decimal("90"))
+
+    asiento = registrar_asiento(debe=Decimal("100"), haber=Decimal("100"))
+
+    assert asiento.esta_cuadrado is True
 
 
 def test_rn_04_detecta_cuentas_vencidas_segun_fecha_y_pago() -> None:

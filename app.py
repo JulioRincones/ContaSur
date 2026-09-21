@@ -11,6 +11,7 @@ from contabilidad import (
     MovimientoTipo,
     clasificar_saldo,
     cuenta_esta_vencida,
+    registrar_asiento,
     registrar_movimiento,
     saldo_contable,
 )
@@ -35,6 +36,12 @@ def movimientos_guardados() -> list[Movimiento]:
     if "movimientos" not in st.session_state:
         st.session_state.movimientos = []
     return st.session_state.movimientos
+
+
+def asientos_guardados() -> list[AsientoContable]:
+    if "asientos" not in st.session_state:
+        st.session_state.asientos = []
+    return st.session_state.asientos
 
 
 def agregar_estilos() -> None:
@@ -154,12 +161,17 @@ def resumen_contable_ui(movimientos: list[Movimiento]) -> None:
 
 def asiento_contable_ui() -> None:
     st.subheader("Asiento contable")
-    col_debe, col_haber = st.columns(2)
-    debe_texto = col_debe.text_input("Debe", value="0", key="debe")
-    haber_texto = col_haber.text_input("Haber", value="0", key="haber")
+    with st.form("form_asiento", clear_on_submit=True):
+        col_debe, col_haber = st.columns(2)
+        debe_texto = col_debe.text_input("Debe", value="0", key="debe")
+        haber_texto = col_haber.text_input("Haber", value="0", key="haber")
+        enviado = st.form_submit_button("Registrar asiento")
+
+    if not enviado:
+        return
 
     try:
-        asiento = AsientoContable(
+        asiento = registrar_asiento(
             debe=decimal_desde_texto(debe_texto),
             haber=decimal_desde_texto(haber_texto),
         )
@@ -167,14 +179,13 @@ def asiento_contable_ui() -> None:
         st.error(str(error))
         return
 
-    if asiento.esta_cuadrado:
-        mostrar_estado("Asiento cuadrado: Debe y Haber coinciden.", "ok")
-    else:
-        diferencia = asiento.debe - asiento.haber
-        mostrar_estado(
-            f"Asiento descuadrado. Diferencia: {formato_pesos(diferencia)}",
-            "bad",
-        )
+    asientos_guardados().append(asiento)
+    mostrar_estado(
+        "Asiento registrado: Debe y Haber coinciden "
+        f"en {formato_pesos(asiento.debe)}.",
+        "ok",
+    )
+    st.caption(f"Asientos registrados en esta sesión: {len(asientos_guardados())}")
 
 
 def cuenta_por_pagar_ui() -> None:

@@ -58,7 +58,7 @@ La tabla relaciona las necesidades del sistema con criterios verificables y con 
 |---|---|---|---|
 | Evitar movimientos con montos inválidos | Todo monto registrado debe ser > 0 | Prueba pytest RN-01 | VACÍA |
 | Obtener correctamente el saldo de la empresa | Saldo = ingresos - egresos | Prueba pytest RN-02 | VACÍA |
-| Evitar asientos contables descuadrados | Debe = Haber | Prueba pytest RN-03 | Hallazgo 3: la interfaz detecta el descuadre, pero no impide ni registra el asiento |
+| Evitar asientos contables descuadrados | Debe = Haber; un descuadre se rechaza al intentar registrarlo | Pruebas pytest RN-03 de clasificación y rechazo | Hallazgo 3: brecha confirmada y corregida mediante `registrar_asiento` |
 | Identificar obligaciones vencidas | Una cuenta impaga con vencimiento anterior a la fecha evaluada se marca como vencida | Prueba pytest RN-04 | VACÍA |
 | Informar la situación del saldo | > 0 SUPERAVIT; = 0 EQUILIBRIO; < 0 DEFICIT | Prueba pytest RN-05 | VACÍA |
 | Mantener código analizable y tipado | Ruff y Pyrefly deben finalizar sin errores | Salida de ruff y pyrefly | No aplica directamente |
@@ -154,7 +154,7 @@ y `-1` para RN-05. Las pruebas asociadas son
 
 ### Hallazgo 3 - Hallazgo de validación
 
-**Estado:** CONFIRMADO POR CONTRASTE ENTRE LA NECESIDAD DECLARADA Y EL PRODUCTO.
+**Estado:** CONFIRMADO Y CORREGIDO.
 
 **Situación:**  
 La tabla de trazabilidad declara la necesidad de "evitar asientos contables
@@ -180,16 +180,18 @@ el comportamiento que la necesidad declara.
 
 1. Necesidad declarada en la tabla: evitar asientos descuadrados.
 2. `app.py`: el flujo recibe Debe y Haber y solo presenta un mensaje de estado.
-3. `tests/test_negocio.py`: RN-03 prueba la clasificación, no el rechazo de una
-   operación.
+3. En el estado auditado, RN-03 solo probaba la clasificación, no el rechazo de
+   una operación.
 4. Ejemplo reproducible: Debe `100`, Haber `90`; las pruebas siguen en verde y
    la interfaz se limita a informar la diferencia.
 
 **Decisión:**
-Se conserva el hallazgo en esta línea base. En una iteración posterior se debe
-aclarar la necesidad: si solo se requiere informar, se corrige su redacción; si
-realmente se requiere evitar el asiento, se debe implementar una operación de
-registro que rechace el descuadre y añadir su prueba de aceptación.
+Se mantiene la necesidad de evitar asientos descuadrados. La corrección incorpora
+`registrar_asiento`, que rechaza la operación con `ValueError` cuando Debe y
+Haber no coinciden. La interfaz ejecuta esta operación mediante el botón
+"Registrar asiento" y solo confirma el registro cuando el asiento está
+cuadrado. La prueba `test_rn_03_rechaza_registro_de_asiento_descuadrado`
+comprueba tanto el rechazo como la aceptación de un asiento válido.
 
 ---
 
@@ -236,7 +238,28 @@ con `uv sync`.
 | 2026-09-08 | Corrección de defecto real | Permitir que Streamlit importe el paquete instalado | `test_regresion_paquete_disponible_fuera_del_directorio_del_proyecto` |
 | 2026-09-21 | Hallazgo de validación confirmado | Contrastar la necesidad de evitar asientos descuadrados con el comportamiento entregado | Hallazgo 3 y revisión de `app.py` / RN-03 |
 | 2026-09-21 | Ampliación del análisis de tipos | Incluir la interfaz Streamlit en el alcance de Pyrefly | `project-includes = ["app.py", "src", "tests"]`; Pyrefly: 0 errores |
+| 2026-09-21 | Corrección del hallazgo de validación | Rechazar el registro de asientos descuadrados | `registrar_asiento` y prueba de rechazo RN-03 |
 
-## 7. Conclusión de la línea base
+## 7. Ensayo de mutaciones para la verificación en vivo
 
-La calidad de este proyecto no se evaluará por la cantidad de funcionalidades contables implementadas, sino por la capacidad de demostrar su comportamiento mediante evidencia. La línea base verificable queda cubierta porque `ruff`, `pyrefly` y `pytest` finalizan correctamente, existe evidencia para cada regla declarada y se reprodujo/corrigió un defecto real. La auditoría confirmó además una brecha de validación entre la necesidad de evitar asientos descuadrados y la función actual, que solo los detecta. Queda pendiente acordar con el responsable del dominio si la solución debe impedir el registro o si corresponde corregir la redacción de la necesidad.
+Se alteró temporalmente una condición de cada regla declarada y se ejecutó
+`tests/test_negocio.py` contra cada copia mutada. Las copias se crearon fuera del
+repositorio y se eliminaron después del ensayo; el código productivo no fue
+modificado por este procedimiento.
+
+| Regla | Cambio temporal | Prueba que detectó el cambio | Resultado |
+|---|---|---|---|
+| RN-01 | `monto <= 0` por `monto < 0` | `test_rn_01_rechaza_montos_iguales_o_inferiores_a_cero` | 1 fallo |
+| RN-02 | Restar egresos por sumarlos | `test_rn_02_calcula_saldo_como_ingresos_menos_egresos` | 1 fallo |
+| RN-03 | `Debe == Haber` por `Debe != Haber` | Pruebas RN-03 de clasificación y rechazo | 2 fallos |
+| RN-04 | Fecha de vencimiento `<` por `<=` | `test_rn_04_detecta_cuentas_vencidas_segun_fecha_y_pago` | 1 fallo |
+| RN-05 | Saldo `> 0` por `>= 0` | Caso `EQUILIBRIO` de `test_rn_05_clasifica_superavit_equilibrio_y_deficit` | 1 fallo |
+
+Los cinco cambios alteran comportamiento observable y fueron detectados. Para
+explicar el resultado en vivo: cada prueba usa un valor que distingue ambos
+operadores, por ejemplo `0` en RN-01/RN-05 y una fecha igual a la fecha de
+evaluación en RN-04.
+
+## 8. Conclusión de la línea base
+
+La calidad de este proyecto no se evaluará por la cantidad de funcionalidades contables implementadas, sino por la capacidad de demostrar su comportamiento mediante evidencia. La línea base verificable queda cubierta porque `ruff`, `pyrefly` y `pytest` finalizan correctamente, existe evidencia para cada regla declarada y se reprodujo/corrigió un defecto real. La auditoría confirmó además una brecha de validación entre detectar y evitar asientos descuadrados. Se decidió mantener la necesidad de prevención y se corrigió el flujo para rechazar el registro cuando Debe y Haber no coinciden.

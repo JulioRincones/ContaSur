@@ -32,6 +32,15 @@ class AsientoContable:
         return self.debe == self.haber
 
 
+def registrar_asiento(debe: Decimal, haber: Decimal) -> AsientoContable:
+    """Rechaza un asiento si sus totales Debe y Haber no coinciden."""
+
+    asiento = AsientoContable(debe=debe, haber=haber)
+    if not asiento.esta_cuadrado:
+        raise ValueError("El asiento no puede registrarse: Debe y Haber no coinciden.")
+    return asiento
+
+
 @dataclass(frozen=True)
 class CuentaPorPagar:
     """Documento por pagar evaluable segun vencimiento y estado de pago."""

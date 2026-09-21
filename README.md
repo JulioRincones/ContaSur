@@ -31,7 +31,7 @@ El saldo contable se calcula como la suma de los ingresos menos la suma de los e
 `saldo = total_ingresos - total_egresos`
 
 ### RN-03: Equilibrio de un asiento contable
-Un asiento se considera cuadrado únicamente cuando el total del Debe es exactamente igual al total del Haber.
+Un asiento se considera cuadrado únicamente cuando el total del Debe es exactamente igual al total del Haber. Los asientos descuadrados deben ser rechazados al intentar registrarlos.
 
 ### RN-04: Estado de una cuenta por pagar
 Una cuenta se considera vencida cuando no está pagada y su fecha de vencimiento es anterior a la fecha de evaluación. Si fue pagada, no se considera vencida.
@@ -136,13 +136,13 @@ Resultado esperado: todas las pruebas terminan en verde.
 
 La suite debe incluir, como mínimo, una prueba capaz de fallar por cada regla declarada:
 
-| Regla | Comportamiento verificado |
-|---|---|
-| RN-01 | Rechazo de montos iguales o inferiores a cero |
-| RN-02 | Cálculo correcto de ingresos menos egresos |
-| RN-03 | Detección de asientos cuadrados y descuadrados |
-| RN-04 | Detección de cuentas vencidas según fecha y estado de pago |
-| RN-05 | Clasificación correcta de superávit, equilibrio y déficit |
+| Regla | Comportamiento verificado | Mutación ensayada |
+|---|---|---|
+| RN-01 | Rechazo de montos iguales o inferiores a cero | Cambiar `<= 0` por `< 0` |
+| RN-02 | Cálculo correcto de ingresos menos egresos | Sumar egresos en vez de restarlos |
+| RN-03 | Detección y rechazo de asientos descuadrados | Cambiar `Debe == Haber` por `Debe != Haber` |
+| RN-04 | Detección de cuentas vencidas según fecha y estado de pago | Cambiar fecha `<` por `<=` |
+| RN-05 | Clasificación correcta de superávit, equilibrio y déficit | Cambiar saldo `> 0` por `>= 0` |
 
 Además, se debe conservar una prueba que reproduzca un defecto real encontrado durante el desarrollo y documentar su corrección en `CALIDAD.md`.
 
