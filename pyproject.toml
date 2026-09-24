@@ -5,7 +5,9 @@ description = "Sistema simplificado de contabilidad empresarial para pruebas de 
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "fastapi>=0.117.0",
     "streamlit>=1.63.0",
+    "uvicorn>=0.36.0",
 ]
 
 [build-system]
@@ -14,6 +16,8 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "httpx>=0.28.0",
+    "pytest-playwright>=0.7.0",
     "pyrefly>=0.32.0",
     "pytest>=8.0.0",
     "ruff>=0.12.0",
@@ -29,6 +33,11 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+    "unit: pruebas aisladas de reglas de negocio",
+    "integration: pruebas de contratos y componentes conectados",
+    "e2e: recorridos completos con navegador",
+]
 
 [tool.pyrefly]
 project-includes = ["app.py", "src", "tests"]

@@ -101,6 +101,10 @@ def mostrar_estado(texto: str, clase: str) -> None:
 
 def registrar_movimiento_ui() -> None:
     st.subheader("Registrar movimiento")
+    mensaje = st.session_state.pop("mensaje_movimiento", None)
+    if mensaje is not None:
+        st.success(mensaje)
+
     with st.form("form_movimiento", clear_on_submit=True):
         tipo_opcion = st.segmented_control(
             "Tipo",
@@ -122,7 +126,8 @@ def registrar_movimiento_ui() -> None:
         return
 
     movimientos_guardados().append(movimiento)
-    st.success("Movimiento registrado correctamente.")
+    st.session_state.mensaje_movimiento = "Movimiento registrado correctamente."
+    st.rerun()
 
 
 def resumen_contable_ui(movimientos: list[Movimiento]) -> None:
