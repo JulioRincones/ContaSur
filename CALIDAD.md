@@ -243,7 +243,7 @@ con `uv sync`.
 ## 7. Ensayo de mutaciones para la verificación en vivo
 
 Se alteró temporalmente una condición de cada regla declarada y se ejecutó
-`tests/test_negocio.py` contra cada copia mutada. Las copias se crearon fuera del
+`tests/unit/test_negocio.py` contra cada copia mutada. Las copias se crearon fuera del
 repositorio y se eliminaron después del ensayo; el código productivo no fue
 modificado por este procedimiento.
 
@@ -263,3 +263,61 @@ evaluación en RN-04.
 ## 8. Conclusión de la línea base
 
 La calidad de este proyecto no se evaluará por la cantidad de funcionalidades contables implementadas, sino por la capacidad de demostrar su comportamiento mediante evidencia. La línea base verificable queda cubierta porque `ruff`, `pyrefly` y `pytest` finalizan correctamente, existe evidencia para cada regla declarada y se reprodujo/corrigió un defecto real. La auditoría confirmó además una brecha de validación entre detectar y evitar asientos descuadrados. Se decidió mantener la necesidad de prevención y se corrigió el flujo para rechazar el registro cuando Debe y Haber no coinciden.
+
+## 9. Evolución para la Evaluación Parcial 2
+
+### 9.1 Observaciones de la EP1
+
+El feedback docente otorgó 96/100. Los controles, la trazabilidad, el hallazgo
+de validación y la reproducibilidad fueron evaluados como excelentes. La mejora
+solicitada fue conservar un arbitraje concreto frente al agente y extender la
+evidencia a integración y E2E.
+
+Acciones aplicadas:
+
+- El episodio concreto de propuesta, objeción y decisión se conserva en
+  `README.md` y `DISENO-DE-CASOS.md`.
+- Los casos aceptados y descartados tienen fundamento explícito.
+- FastAPI agrega contratos observables de integración.
+- Playwright comprueba desde el navegador el registro de un movimiento y el
+  rechazo de un asiento descuadrado.
+- La prueba E2E detectó que el resumen visual no se actualizaba tras registrar;
+  se corrigió el flujo con un rerun y un mensaje conservado en sesión.
+
+### 9.2 Pirámide de pruebas
+
+| Nivel | Responsabilidad | Riesgo exclusivo |
+|---|---|---|
+| Unitario | Particiones, límites y decisiones del dominio | Operador o fórmula incorrecta |
+| Integración | Contrato HTTP, serialización y conexión FastAPI-dominio | Campo, código o cuerpo incompatible |
+| E2E | Recorrido visible en Streamlit con Chromium | Control ausente, rerun o estado de sesión defectuoso |
+
+Los niveles no duplican el mismo objetivo. La cobertura detallada se encuentra
+en `DISENO-DE-CASOS.md` y la estrategia en `PLAN-DE-PRUEBAS.md`.
+
+### 9.3 Datos y privacidad
+
+La suite usa únicamente montos, tipos y fechas sintéticas. No existen nombres,
+RUT, correos, cuentas bancarias ni documentos reales. Integración crea un estado
+en memoria por prueba y E2E elimina su estado al cerrar el servidor Streamlit.
+
+### 9.4 Evidencia esperada de EP2
+
+```bash
+uv run pytest tests/unit
+uv run pytest tests/integration
+uv run pytest tests/e2e
+uv run pytest
+uv run ruff check .
+uv run pyrefly check
+```
+
+Evidencia ejecutada el 24 de septiembre de 2026:
+
+- Unitarias e integración: `21 passed`.
+- E2E con Chromium: `1 passed`.
+- Suite completa: `22 passed`.
+- Ruff: `All checks passed!`.
+- Pyrefly: `0 errors`.
+
+Los tres niveles conviven en un único comando y cumplen los criterios de salida.
