@@ -3,6 +3,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.integration
+
 
 def test_regresion_paquete_disponible_fuera_del_directorio_del_proyecto(
     tmp_path: Path,
