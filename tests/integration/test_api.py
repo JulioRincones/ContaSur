@@ -103,6 +103,41 @@ def test_api_rechaza_asiento_descuadrado_con_conflicto(
     )
 
 
+def test_api_acepta_asiento_cuadrado_con_contrato_completo(
+    cliente: httpx.Client,
+) -> None:
+    respuesta = cliente.post(
+        "/api/asientos",
+        json={"debe": "100", "haber": "100"},
+    )
+
+    assert respuesta.status_code == 201
+    assert respuesta.json() == {
+        "debe": "100",
+        "haber": "100",
+        "estado": "CUADRADO",
+    }
+
+
+@pytest.mark.nonfunctional
+def test_seguridad_rechaza_tipo_y_campos_no_declarados(
+    cliente: httpx.Client,
+) -> None:
+    tipo_invalido = cliente.post(
+        "/api/movimientos",
+        json={"tipo": "transferencia", "monto": "100"},
+    )
+    campo_inesperado = cliente.post(
+        "/api/movimientos",
+        json={"tipo": "ingreso", "monto": "100", "rut": "11.111.111-1"},
+    )
+
+    assert tipo_invalido.status_code == 422
+    assert campo_inesperado.status_code == 422
+    assert "traceback" not in tipo_invalido.text.lower()
+    assert "traceback" not in campo_inesperado.text.lower()
+
+
 @pytest.mark.parametrize(
     ("fecha_vencimiento", "pagada", "vencida"),
     [

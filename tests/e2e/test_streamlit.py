@@ -77,6 +77,7 @@ def servidor_streamlit() -> Iterator[str]:
         detener_proceso(proceso)
 
 
+@pytest.mark.regression
 def test_flujo_registra_ingreso_y_rechaza_asiento_descuadrado(
     page: Page,
     servidor_streamlit: str,
@@ -100,3 +101,19 @@ def test_flujo_registra_ingreso_y_rechaza_asiento_descuadrado(
             "El asiento no puede registrarse: Debe y Haber no coinciden."
         )
     ).to_be_visible()
+
+
+@pytest.mark.nonfunctional
+def test_accesibilidad_controles_criticos_tienen_nombre(
+    page: Page,
+    servidor_streamlit: str,
+) -> None:
+    page.goto(servidor_streamlit)
+
+    expect(page.get_by_role("heading", name="ContaSur")).to_be_visible()
+    expect(page.get_by_label("Monto")).to_be_visible()
+    expect(page.get_by_role("button", name="Registrar movimiento")).to_be_visible()
+    expect(page.get_by_label("Debe")).to_be_visible()
+    expect(page.get_by_label("Haber")).to_be_visible()
+    expect(page.get_by_role("button", name="Registrar asiento")).to_be_visible()
+    expect(page.get_by_label("Pagada")).to_be_visible()

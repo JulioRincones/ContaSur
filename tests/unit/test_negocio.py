@@ -22,13 +22,13 @@ def test_rn_01_rechaza_montos_iguales_o_inferiores_a_cero() -> None:
         registrar_movimiento("ingreso", Decimal("0"))
 
     with pytest.raises(ValueError, match="mayor que cero"):
-        registrar_movimiento("egreso", Decimal("-1"))
+        registrar_movimiento("egreso", Decimal("-0.01"))
 
 
 def test_rn_01_registra_movimientos_con_monto_mayor_que_cero() -> None:
-    movimiento = registrar_movimiento("ingreso", Decimal("1"))
+    movimiento = registrar_movimiento("ingreso", Decimal("0.01"))
 
-    assert movimiento.monto == Decimal("1")
+    assert movimiento.monto == Decimal("0.01")
     assert movimiento.tipo == "ingreso"
 
 
@@ -75,6 +75,7 @@ def test_rn_03_detecta_asiento_cuadrado_y_descuadrado(
     assert asiento.esta_cuadrado is esta_cuadrado
 
 
+@pytest.mark.regression
 def test_rn_03_rechaza_registro_de_asiento_descuadrado() -> None:
     with pytest.raises(ValueError, match="Debe y Haber no coinciden"):
         registrar_asiento(debe=Decimal("100"), haber=Decimal("90"))

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.regression]
 
 
 def test_regresion_paquete_disponible_fuera_del_directorio_del_proyecto(

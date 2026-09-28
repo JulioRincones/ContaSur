@@ -37,6 +37,8 @@ markers = [
     "unit: pruebas aisladas de reglas de negocio",
     "integration: pruebas de contratos y componentes conectados",
     "e2e: recorridos completos con navegador",
+    "regression: pruebas que protegen defectos corregidos",
+    "nonfunctional: pruebas de rendimiento, seguridad o accesibilidad",
 ]
 
 [tool.pyrefly]
