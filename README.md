@@ -77,6 +77,7 @@ contabilidad-empresas/
 |-- DISENO-DE-CASOS.md
 |-- PLAN-DE-PRUEBAS.md
 |-- NO-FUNCIONALES.md
+|-- DEFENSA.md
 |-- .github/workflows/quality.yml
 |-- app.py
 |-- src/
@@ -214,6 +215,7 @@ Resultado esperado: la verificación de tipos termina sin errores.
   criterios de entrada/salida según ISO/IEC/IEEE 29119.
 - `NO-FUNCIONALES.md`: criterios previos, mediciones y hallazgos de rendimiento,
   seguridad y accesibilidad.
+- `DEFENSA.md`: respuestas y evidencias para la defensa oral del proyecto.
 
 ## 12. Pruebas y reglas de negocio
 
