@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from contabilidad.negocio import (
     CuentaPorPagar,
@@ -20,7 +20,11 @@ from contabilidad.negocio import (
 )
 
 
-class MovimientoEntrada(BaseModel):
+class EntradaAPI(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class MovimientoEntrada(EntradaAPI):
     tipo: MovimientoTipo
     monto: Decimal
 
@@ -36,7 +40,7 @@ class ResumenRespuesta(BaseModel):
     clasificacion: Literal["SUPERAVIT", "EQUILIBRIO", "DEFICIT"]
 
 
-class AsientoEntrada(BaseModel):
+class AsientoEntrada(EntradaAPI):
     debe: Decimal
     haber: Decimal
 
@@ -45,7 +49,7 @@ class AsientoRespuesta(AsientoEntrada):
     estado: Literal["CUADRADO"]
 
 
-class CuentaEntrada(BaseModel):
+class CuentaEntrada(EntradaAPI):
     fecha_vencimiento: date
     fecha_evaluacion: date
     pagada: bool = False
