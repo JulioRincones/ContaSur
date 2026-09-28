@@ -47,5 +47,8 @@ jobs:
       - name: Pruebas extremo a extremo
         run: uv run pytest tests/e2e
 
+      - name: Pruebas de regresión
+        run: uv run pytest -m regression
+
       - name: Pruebas no funcionales
         run: uv run pytest -m nonfunctional

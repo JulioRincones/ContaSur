@@ -23,14 +23,14 @@ Cada caso tiene un identificador estable:
 | P2: monto cero | `monto = 0` | Rechazo |
 | P3: monto positivo | `monto > 0` | Movimiento válido |
 
-El límite es `0`. Se prueban `-1`, `0` y `1`; los enteros hacen visible la
-condición sin depender del formato decimal.
+El límite es `0`. Se prueban `-0.01`, `0` y `0.01`, coherentes con la precisión
+operativa de un centavo declarada para todos los montos.
 
 | Caso | Partición/límite | Resultado esperado | Prueba |
 |---|---|---|---|
-| CU-RN01-01 | P1, `-1` | `ValueError` | `test_rn_01_rechaza_montos_iguales_o_inferiores_a_cero` |
+| CU-RN01-01 | P1, `-0.01` | `ValueError` | `test_rn_01_rechaza_montos_iguales_o_inferiores_a_cero` |
 | CU-RN01-02 | P2, `0` | `ValueError` | `test_rn_01_rechaza_montos_iguales_o_inferiores_a_cero` |
-| CU-RN01-03 | P3, `1` | Movimiento de ingreso | `test_rn_01_registra_movimientos_con_monto_mayor_que_cero` |
+| CU-RN01-03 | P3, `0.01` | Movimiento de ingreso | `test_rn_01_registra_movimientos_con_monto_mayor_que_cero` |
 | CI-RN01-01 | Contrato HTTP, `0` | HTTP 422 y detalle de negocio | `test_api_rechaza_movimiento_con_monto_cero` |
 
 ## 3. RN-02: cálculo del saldo
@@ -84,6 +84,7 @@ Alrededor de cero se prueban `-0.01`, `0` y `0.01`.
 | CU-RN03-03 | P3 | `esta_cuadrado = False` | `test_rn_03_detecta_asiento_cuadrado_y_descuadrado` |
 | CU-RN03-04 | Descuadrado al registrar | `ValueError` | `test_rn_03_rechaza_registro_de_asiento_descuadrado` |
 | CI-RN03-01 | Descuadrado vía API | HTTP 409 | `test_api_rechaza_asiento_descuadrado_con_conflicto` |
+| CI-RN03-02 | Cuadrado vía API | HTTP 201 y estado `CUADRADO` | `test_api_acepta_asiento_cuadrado_con_contrato_completo` |
 | CE-RN03-01 | Descuadrado desde UI | Mensaje visible de rechazo | `test_flujo_registra_ingreso_y_rechaza_asiento_descuadrado` |
 
 ## 5. RN-04: cuenta por pagar vencida
@@ -165,3 +166,11 @@ Julio auditó esas propuestas contra las reglas y el principio de minimización:
 La decisión conserva casos derivados de técnicas formales y descarta volumen
 sin fundamento. La evidencia queda en este documento, en las pruebas asociadas
 y en el commit que incorpore la EP2.
+
+## 10. Casos no funcionales de la evaluación final
+
+| Caso | Categoría | Criterio previo | Prueba |
+|---|---|---|---|
+| CNF-REN-01 | Rendimiento | 10.000 movimientos en menos de `0,5 s` | `test_rendimiento_calcula_diez_mil_movimientos_en_medio_segundo` |
+| CNF-SEG-01 | Seguridad | Tipo y campo extra reciben 422 sin trazas | `test_seguridad_rechaza_tipo_y_campos_no_declarados` |
+| CNF-ACC-01 | Accesibilidad | Siete controles críticos tienen nombre accesible | `test_accesibilidad_controles_criticos_tienen_nombre` |

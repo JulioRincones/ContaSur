@@ -321,3 +321,73 @@ Evidencia ejecutada el 24 de septiembre de 2026:
 - Pyrefly: `0 errors`.
 
 Los tres niveles conviven en un único comando y cumplen los criterios de salida.
+
+## 10. Cierre para la Evaluación Final
+
+### 10.1 Observaciones de la EP2
+
+El feedback docente otorgó 96/100 y confirmó que las tres mutaciones fueron
+detectadas en su nivel. Para cerrar sus observaciones se realizaron estos
+cambios:
+
+- RN-01 usa `-0.01`, `0` y `0.01`, coherentes con la precisión declarada.
+- El asiento cuadrado tiene contrato de integración completo: HTTP `201`, Debe,
+  Haber y estado `CUADRADO`.
+- Cada riesgo posee probabilidad, impacto, exposición y fundamento.
+- La evidencia rojo-verde se conserva mediante el historial de GitHub Actions.
+
+### 10.2 Integración continua
+
+`.github/workflows/quality.yml` se ejecuta ante cada `push` y `pull_request`.
+Instala el entorno bloqueado y Chromium, y ejecuta Ruff, Pyrefly, unitarias,
+integración, E2E y no funcionales. El badge y el historial están enlazados desde
+`README.md`.
+
+La ejecución
+[36364212305](https://github.com/JulioRincones/ContaSur/actions/runs/36364212305)
+quedó roja en integración al detectar un campo no declarado. La corrección
+posterior produjo la ejecución
+[36364345551](https://github.com/JulioRincones/ContaSur/actions/runs/36364345551)
+en verde. El historial conserva así el ciclo prueba roja y corrección verde.
+
+### 10.3 Regresiones e inestabilidad
+
+El marcador `regression` conserva evidencia para tres defectos corregidos:
+
+1. Importación fallida del paquete al iniciar Streamlit.
+2. Detección de asiento descuadrado sin rechazo del registro.
+3. Resumen visual desactualizado después de registrar un movimiento.
+
+No hay `skip`, `xfail` ni pruebas desactivadas. Durante la creación del E2E se
+observaron esperas incorrectas por el rerun de Streamlit y un cierre lento del
+servidor. Se investigaron y corrigieron esperando el estado de ejecución y
+cerrando el proceso completo. No queda una inestabilidad conocida; cualquier
+falla futura debe documentarse, no ocultarse.
+
+### 10.4 Evidencia no funcional
+
+Los criterios se declararon en `NO-FUNCIONALES.md` antes de medir.
+
+| Categoría | Criterio | Resultado local | Estado |
+|---|---|---|---|
+| Rendimiento | 10.000 movimientos en menos de `0,5 s` | `0,002857 s` | Cumple |
+| Seguridad | Entradas fuera de contrato reciben 422 sin trazas | Dos respuestas 422, sin `traceback` | Cumple |
+| Accesibilidad | Siete controles críticos con nombre accesible | Siete localizados en Chromium | Cumple |
+
+El historial en `st.dataframe` conserva una limitación accesible conocida: sus
+celdas no aparecieron en el árbol observado por Playwright. Se acepta en esta
+versión porque no impide operar los formularios ni consultar el resumen, pero
+queda fuera del criterio de salida de accesibilidad exhaustiva.
+
+### 10.5 Balance frente al agente
+
+El agente propuso casos, estructura, API, E2E, documentación y CI. Julio auditó
+las propuestas contra las reglas y las salidas reales. Se descartó cambiar RN-04
+para considerar vencida una cuenta que vence hoy. También se reemplazó la
+integración ASGI interna propuesta inicialmente cuando produjo conflicto de
+bucles al convivir con Playwright; la decisión final usa Uvicorn y HTTP reales.
+
+Las decisiones propias que se sostienen son los límites contables, el rechazo de
+asientos descuadrados, la minimización de datos, la separación por niveles, los
+umbrales no funcionales previos y la aceptación explícita del riesgo accesible
+del historial.

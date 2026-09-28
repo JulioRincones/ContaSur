@@ -17,6 +17,8 @@ pruebas extremo a extremo.
 - RN-05: clasificación del saldo.
 - Contratos HTTP de movimientos, resumen, asientos y cuentas.
 - Flujo web de registro de ingreso y rechazo de asiento descuadrado.
+- Rendimiento del cálculo de saldo, seguridad de entrada y accesibilidad de los
+  controles críticos.
 - Instalación del paquete y controles Ruff/Pyrefly.
 
 ### Excluido
@@ -24,7 +26,7 @@ pruebas extremo a extremo.
 - Persistencia en base de datos y concurrencia multiusuario.
 - Autenticación, autorización y datos personales.
 - Tributación, facturación electrónica y normativa contable externa.
-- Rendimiento, carga, accesibilidad exhaustiva y múltiples navegadores.
+- Carga concurrente, accesibilidad exhaustiva y múltiples navegadores.
 - Despliegue productivo y recuperación ante desastres.
 
 Estas exclusiones corresponden al alcance educativo actual y no se presentan
@@ -32,15 +34,20 @@ como comportamientos verificados.
 
 ## 3. Riesgos del producto
 
-| Riesgo | Prioridad | Calidad ISO 25010 | Respuesta de prueba |
-|---|---|---|---|
-| R1: aceptar montos o asientos inválidos | Alta | Adecuación funcional, fiabilidad | Límites unitarios, error HTTP y rechazo E2E |
-| R2: calcular o clasificar mal el saldo | Alta | Adecuación funcional | Particiones unitarias y resumen de integración |
-| R3: contrato API incompatible con consumidores | Alta | Compatibilidad, fiabilidad | Estados HTTP y cuerpos exactos de integración |
-| R4: interfaz no actualiza estado o pierde el rechazo | Alta | Adecuación funcional | Recorrido Playwright con navegador real |
-| R5: pruebas con estado compartido o intermitentes | Media | Fiabilidad, mantenibilidad | Fixture aislado y servidor/puerto por sesión E2E |
-| R6: exposición de datos personales | Baja en el alcance actual | Seguridad | Datos sintéticos y minimizados |
-| R7: paquete no instalable fuera del repositorio | Media | Portabilidad, mantenibilidad | Regresión de empaquetado |
+Probabilidad e impacto usan escala `1` (bajo), `2` (medio) y `3` (alto). La
+exposición es `P x I`: `1-2` baja, `3-4` media y `6-9` alta. La probabilidad se
+basa en la cantidad de condiciones, integraciones o defectos ya observados; el
+impacto considera si impide operar o entrega un resultado contable incorrecto.
+
+| Riesgo | P | I | Exposición | Fundamento | Calidad ISO 25010 | Respuesta de prueba |
+|---|---:|---:|---:|---|---|---|
+| R1: aceptar montos o asientos inválidos | 2 | 3 | 6 Alta | Tiene límites y un defecto previo de validación; aceptarlo altera registros | Adecuación funcional, fiabilidad | Límites unitarios, error HTTP y rechazo E2E |
+| R2: calcular o clasificar mal el saldo | 2 | 3 | 6 Alta | Varias ramas alimentan el resultado principal | Adecuación funcional | Particiones unitarias, resumen y rendimiento |
+| R3: contrato API incompatible | 2 | 2 | 4 Media | Campos y códigos pueden cambiar aunque el dominio siga correcto | Compatibilidad, fiabilidad | Estados HTTP y cuerpos exactos |
+| R4: interfaz no actualiza estado o pierde el rechazo | 2 | 2 | 4 Media | Ya ocurrió un resumen visual desactualizado | Adecuación funcional, usabilidad | Recorrido Playwright y controles accesibles |
+| R5: pruebas con estado compartido o intermitentes | 2 | 2 | 4 Media | Usa servidores, puertos y navegador | Fiabilidad, mantenibilidad | Estado aislado, puertos libres y cierre verificable |
+| R6: exposición de datos personales | 1 | 2 | 2 Baja | El alcance no solicita datos personales | Seguridad | Datos sintéticos, campos extra prohibidos y minimización |
+| R7: paquete no instalable fuera del repositorio | 1 | 3 | 3 Media | Ya ocurrió una vez; bloquearía toda ejecución | Portabilidad, mantenibilidad | Regresión de empaquetado y CI desde clon |
 
 ## 4. Estrategia por nivel
 
@@ -67,16 +74,16 @@ mensajes. No repite todas las combinaciones del dominio.
 
 El detalle completo de particiones y valores está en `DISENO-DE-CASOS.md`.
 
-| Riesgo | Requisito | Casos | Pruebas automatizadas |
-|---|---|---|---|
-| R1 | RN-01 | CU-RN01-01..03, CI-RN01-01 | Pruebas RN-01 y `test_api_rechaza_movimiento_con_monto_cero` |
-| R1 | RN-03 | CU-RN03-01..04, CI-RN03-01, CE-RN03-01 | Pruebas RN-03, rechazo API y flujo Playwright |
-| R2 | RN-02/RN-05 | CU-RN02-01..04, CI-RN02-01, CU-RN05-01..03 | Pruebas de saldo, resumen y clasificación |
-| R3 | Contrato HTTP | CI-RN01-01, CI-RN02-01, CI-RN03-01, CI-RN04-01..03 | `tests/integration/test_api.py` |
-| R4 | Flujo web | CE-FLUJO-01 | `tests/e2e/test_streamlit.py` |
-| R5 | Aislamiento | Todos los CI/CE | Fixtures `cliente` y `servidor_streamlit` |
-| R6 | Protección de datos | Todos | Literales sintéticos documentados |
-| R7 | Ejecutabilidad | Regresión EP1 | `test_regresion_paquete_disponible_fuera_del_directorio_del_proyecto` |
+| Riesgo | Requisito | Casos | Pruebas automatizadas | Resultado CI |
+|---|---|---|---|---|
+| R1 | RN-01 | CU-RN01-01..03, CI-RN01-01 | Pruebas RN-01 y `test_api_rechaza_movimiento_con_monto_cero` | Verde, ejecución 36364345551 |
+| R1 | RN-03 | CU-RN03-01..04, CI-RN03-01..02, CE-RN03-01 | Pruebas RN-03, contratos de asiento y flujo Playwright | Verde, ejecución 36364345551 |
+| R2 | RN-02/RN-05 | CU-RN02-01..04, CI-RN02-01, CU-RN05-01..03 | Pruebas de saldo, resumen, clasificación y rendimiento | Verde, ejecución 36364345551 |
+| R3 | Contrato HTTP | CI-RN01-01, CI-RN02-01, CI-RN03-01, CI-RN04-01..03 | `tests/integration/test_api.py` | Rojo 36364212305; verde 36364345551 |
+| R4 | Flujo web | CE-FLUJO-01 | `tests/e2e/test_streamlit.py` | Verde, ejecución 36364345551 |
+| R5 | Aislamiento | Todos los CI/CE | Fixtures `cliente` y `servidor_streamlit` | Verde, ejecución 36364345551 |
+| R6 | Protección de datos | Todos | Seguridad de entrada y literales sintéticos | Rojo 36364212305; verde 36364345551 |
+| R7 | Ejecutabilidad | Regresión EP1 | `test_regresion_paquete_disponible_fuera_del_directorio_del_proyecto` | Verde, ejecución 36364345551 |
 
 ## 6. Datos de prueba
 
@@ -127,6 +134,8 @@ datos personales.
 uv run pytest tests/unit
 uv run pytest tests/integration
 uv run pytest tests/e2e
+uv run pytest -m regression
+uv run pytest -m nonfunctional
 uv run pytest
 uv run ruff check .
 uv run pyrefly check
@@ -138,3 +147,44 @@ Julio Rincones revisa las reglas, acepta o descarta los casos y entrega el
 repositorio. El agente propone estructura, casos y automatización; sus propuestas
 se auditan en `DISENO-DE-CASOS.md` y `README.md`. La salida de Pytest, Ruff,
 Pyrefly y el historial Git constituyen la evidencia reproducible.
+
+## 12. Regresión e inestabilidad
+
+El marcador `regression` protege tres defectos corregidos:
+
+- El paquete no estaba disponible al ejecutar Streamlit fuera del contexto de
+  Pytest.
+- Un asiento descuadrado podía detectarse sin impedir su registro.
+- El resumen visual seguía mostrando `$0` después de registrar un ingreso.
+
+No existen pruebas omitidas con `skip` ni fallos esperados con `xfail`. El E2E
+mostró una espera incorrecta durante su construcción; se investigó el rerun de
+Streamlit, se esperó el indicador de ejecución y se cerró explícitamente el árbol
+de procesos. Tras la corrección no se mantiene ninguna inestabilidad conocida.
+
+## 13. Cierre del plan
+
+### Resultado frente a los criterios de salida
+
+| Criterio | Evidencia final | Estado |
+|---|---|---|
+| Tres niveles sin fallos | Suite local: `26 passed`; CI verde | Cumple |
+| Ruff y Pyrefly con código cero | Etapas visibles en Actions | Cumple |
+| Casos trazables | `DISENO-DE-CASOS.md` y tabla de este plan | Cumple |
+| Casos descartados justificados | Cuatro descartes documentados | Cumple |
+| Sin secretos ni datos personales | Datos sintéticos y campos extra prohibidos | Cumple |
+| Servidores cerrados y estado aislado | Fixtures verifican cierre y estado por prueba | Cumple |
+| Inestabilidad tratada | Sin `skip`/`xfail`; sincronización E2E documentada | Cumple |
+
+### Evidencia del pipeline
+
+- [Ejecución roja controlada 36364212305](https://github.com/JulioRincones/ContaSur/actions/runs/36364212305): integración detectó que la API aceptaba un campo no declarado.
+- [Ejecución verde 36364345551](https://github.com/JulioRincones/ContaSur/actions/runs/36364345551): la corrección prohibió campos extra y todas las etapas aprobaron.
+
+### Riesgos aceptados y trabajo fuera de alcance
+
+Se mantienen fuera autenticación, persistencia, carga concurrente, normativa
+tributaria, accesibilidad exhaustiva y múltiples navegadores. El riesgo concreto
+aceptado es que las celdas de `st.dataframe` no aparecieron en el árbol de
+accesibilidad observado; los formularios y el resumen sí cumplen el criterio
+de nombres accesibles. No se afirma cobertura sobre las exclusiones.

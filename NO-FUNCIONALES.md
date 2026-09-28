@@ -32,7 +32,8 @@ ser una capacidad productiva de carga.
 
 ### Resultado
 
-Pendiente de medición inicial.
+Resultado local del 27 de septiembre de 2026: `0,002857 s`, saldo `$0` y
+criterio aprobado. Representa aproximadamente el `0,57 %` del umbral.
 
 ## 3. Seguridad de entrada
 
@@ -57,7 +58,8 @@ Prueba: `test_seguridad_rechaza_tipo_y_campos_no_declarados`.
 
 ### Resultado
 
-Pendiente de ejecución inicial.
+Resultado local del 27 de septiembre de 2026: ambos intentos respondieron HTTP
+`422`, ninguna respuesta expuso `traceback` y el criterio fue aprobado.
 
 ## 4. Usabilidad y accesibilidad
 
@@ -97,9 +99,20 @@ control mediante roles y etiquetas accesibles de Playwright.
 
 ### Resultado
 
-Pendiente de ejecución inicial.
+Resultado local del 27 de septiembre de 2026: los siete elementos críticos se
+localizaron mediante nombre accesible en Chromium y el criterio fue aprobado.
 
-## 5. Privacidad
+## 5. Resumen de la medición
+
+```text
+3 passed, 23 deselected
+rendimiento_saldo_segundos=0.002857
+```
+
+Las tres categorías cumplen localmente y también aprobaron en la ejecución
+[verde de GitHub Actions](https://github.com/JulioRincones/ContaSur/actions/runs/36364345551).
+
+## 6. Privacidad
 
 No se contabiliza como una de las tres categorías exigidas porque ContaSur no
 trata datos personales en su alcance actual. Se mantiene minimización: montos,

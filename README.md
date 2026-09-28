@@ -1,5 +1,7 @@
 # Sistema de Contabilidad para Empresas
 
+[![Calidad](https://github.com/JulioRincones/ContaSur/actions/workflows/quality.yml/badge.svg)](https://github.com/JulioRincones/ContaSur/actions/workflows/quality.yml)
+
 Proyecto desarrollado para la asignatura **PRO402 - Taller de Testing y Calidad de Software**.
 
 ## 1. Descripción del proyecto
@@ -57,6 +59,7 @@ Estas reglas constituyen el comportamiento observable que debe estar cubierto po
 - Streamlit: interfaz gráfica web local.
 - FastAPI: interfaz HTTP consumible y contratos de integración.
 - Playwright: pruebas de extremo a extremo con Chromium.
+- GitHub Actions: integración continua ante cada push y pull request.
 - ruff: análisis estático.
 - pyrefly: verificación de tipos.
 - pytest: pruebas automatizadas.
@@ -73,6 +76,8 @@ contabilidad-empresas/
 |-- CALIDAD.md
 |-- DISENO-DE-CASOS.md
 |-- PLAN-DE-PRUEBAS.md
+|-- NO-FUNCIONALES.md
+|-- .github/workflows/quality.yml
 |-- app.py
 |-- src/
 |   `-- contabilidad/
@@ -164,6 +169,25 @@ Chromium y cierra el servidor al terminar.
 uv run pytest
 ```
 
+### Regresiones
+
+```bash
+uv run pytest -m regression
+```
+
+### Pruebas no funcionales
+
+```bash
+uv run pytest -m nonfunctional
+```
+
+Cubren rendimiento, seguridad de entrada y accesibilidad de controles críticos.
+
+El historial de integración continua conserva una
+[ejecución roja controlada](https://github.com/JulioRincones/ContaSur/actions/runs/36364212305)
+y su posterior
+[corrección en verde](https://github.com/JulioRincones/ContaSur/actions/runs/36364345551).
+
 ## 10. Ejecución de los controles de calidad
 
 ### Ruff
@@ -188,6 +212,8 @@ Resultado esperado: la verificación de tipos termina sin errores.
   decisión, casos descartados y vínculo con pruebas.
 - `PLAN-DE-PRUEBAS.md`: alcance, riesgos, estrategia, trazabilidad, datos y
   criterios de entrada/salida según ISO/IEC/IEEE 29119.
+- `NO-FUNCIONALES.md`: criterios previos, mediciones y hallazgos de rendimiento,
+  seguridad y accesibilidad.
 
 ## 12. Pruebas y reglas de negocio
 
@@ -246,6 +272,24 @@ solo tipo; RN-03 no ejercitaba ambos lados del descuadre; RN-04 no incluía fech
 posterior. Después se agregaron esos casos unitarios y se vinculó cada uno con
 su partición formal. La evidencia queda en `tests/unit/test_negocio.py` y en el
 commit de la EP2 que incorpora estos cambios.
+
+### Balance del módulo
+
+Se delegó al agente la propuesta de estructura, casos, código inicial, pipeline
+y documentación. Se auditaron las reglas, los límites, las salidas reales de las
+herramientas y la correspondencia entre lo escrito y lo ejecutado.
+
+Dos propuestas resultaron incorrectas o insuficientes. Considerar vencida una
+cuenta que vence el mismo día contradecía RN-04 y fue descartado. También se
+propuso inicialmente una integración interna mediante transporte ASGI; al
+interferir su bucle asíncrono con Playwright en la suite completa, se reemplazó
+por Uvicorn y HTTP reales.
+
+Las decisiones sostenidas por Julio son mantener la comparación temporal
+estricta, rechazar asientos descuadrados, usar datos sintéticos mínimos, separar
+los tres niveles, aceptar temporalmente la limitación accesible del historial y
+fijar los umbrales no funcionales antes de medir. El agente ayudó a ejecutar;
+la aceptación de estas decisiones y de sus riesgos pertenece al autor.
 
 ## 14. Autor
 
