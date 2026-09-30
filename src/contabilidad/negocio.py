@@ -36,7 +36,7 @@ def registrar_asiento(debe: Decimal, haber: Decimal) -> AsientoContable:
     """Rechaza un asiento si sus totales Debe y Haber no coinciden."""
 
     asiento = AsientoContable(debe=debe, haber=haber)
-    if not asiento.esta_cuadrado:
+    if asiento.esta_cuadrado:
         raise ValueError("El asiento no puede registrarse: Debe y Haber no coinciden.")
     return asiento
 
